@@ -25,14 +25,16 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-COPY composer.json .
+COPY composer.json composer.lock ./
 
 RUN curl -sS https://getcomposer.org/installer | php
 
-RUN php composer.phar install
+RUN php composer.phar install --no-dev --optimize-autoloader
 
 COPY . .
 
-CMD chmod -R 777 /app/var/cache /app/var/log && /app/bin/console cache:clear
+# Start pronto pra Railway: usa $PORT (Railway injeta) e cai pra 1010 local.
+# O docker-compose.yml local sobrescreve com `command:` próprio, então o dev não muda.
+CMD chmod -R 777 /app/var/cache /app/var/log; php -S 0.0.0.0:${PORT:-1010} -t public/
 
 EXPOSE 1010
