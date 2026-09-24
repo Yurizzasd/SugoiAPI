@@ -2,26 +2,11 @@ FROM php:8.3-alpine
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-RUN apk add --no-cache \
-    php-mbstring \
-    php-xml \
-    php-ctype \
-    php-json \
-    php-tokenizer \
-    php-openssl \
-    php-session \
-    php-xmlwriter \
-    php-xmlreader \
-    php-simplexml \
-    php-dom \
-    php-xml \
-    php-curl \
-    php-phar \
-    php-iconv \
-    php-fileinfo \
-    php-zip \
-    php-gd \
-    php-intl
+# Extensões no PHP da imagem (docker-php-ext-*). Os pacotes apk php-*
+# instalam OUTRO PHP do Alpine que o `php` da imagem não usa — por isso o 500.
+RUN apk add --no-cache icu-dev libxml2-dev libzip-dev oniguruma-dev \
+ && docker-php-ext-install -j$(nproc) \
+    ctype curl dom fileinfo iconv intl mbstring session simplexml tokenizer xml xmlreader xmlwriter zip opcache
 
 WORKDIR /app
 
