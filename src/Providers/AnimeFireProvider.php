@@ -89,7 +89,16 @@ class AnimeFireProvider implements MediaProviderInterface, MediaProviderProperti
 
     private function client(): Client
     {
-        return new Client(['base_uri' => self::API, 'timeout' => 15, 'http_errors' => false]);
+        return new Client([
+            'base_uri' => self::API,
+            'timeout' => 15,
+            'http_errors' => false,
+            'headers' => [
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+                'Accept' => 'application/json',
+                'Referer' => 'https://animefire.one/',
+            ],
+        ]);
     }
 
     private function norm(string $s): string
