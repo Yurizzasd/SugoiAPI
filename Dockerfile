@@ -1,26 +1,33 @@
-FROM php:8.3-alpine
+FROM php:8.3-apache-bookworm
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Extensões no PHP da imagem (docker-php-ext-*). Os pacotes apk php-*
-# instalam OUTRO PHP do Alpine que o `php` da imagem não usa — por isso o 500.
-RUN apk add --no-cache curl-dev icu-dev libxml2-dev libzip-dev oniguruma-dev \
+# Extensões compiladas no Debian (no Alpine a compilação quebra: iconv, libcurl...).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl unzip \
+    libcurl4-openssl-dev libicu-dev libonig-dev libxml2-dev libzip-dev \
  && docker-php-ext-install -j$(nproc) \
-    ctype curl dom fileinfo intl mbstring session simplexml tokenizer xml xmlreader xmlwriter zip opcache
+    ctype curl dom fileinfo iconv intl mbstring session simplexml tokenizer xml zip opcache \
+ && a2enmod rewrite \
+ && rm -rf /var/lib/apt/lists/*
+
+# Apache serve public/ e escuta na $PORT do Railway.
+ENV APACHE_DOCUMENT_ROOT=/app/public
+RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+ && sed -ri 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 WORKDIR /app
 
 COPY composer.json composer.lock ./
 
-RUN curl -sS https://getcomposer.org/installer | php
-
-RUN php composer.phar install --no-dev --optimize-autoloader --no-scripts
+RUN curl -sS https://getcomposer.org/installer | php \
+ && php composer.phar install --no-dev --optimize-autoloader --no-scripts
 
 COPY . .
 
-# Start pronto pra Railway: usa $PORT (Railway injeta) e cai pra 1010 local.
-# O cache é limpo no start (com as envs de runtime), não no build.
 # O docker-compose.yml local sobrescreve com `command:` próprio, então o dev não muda.
-CMD chmod -R 777 /app/var/cache /app/var/log; php bin/console cache:clear --env=${APP_ENV:-prod} || true; php -S 0.0.0.0:${PORT:-1010} -t public/
-
-EXPOSE 1010
+CMD chmod -R 777 /app/var/cache /app/var/log; \
+    php bin/console cache:clear --env=${APP_ENV:-prod} || true; \
+    sed -i "s/Listen 80/Listen ${PORT:-80}/" /etc/apache2/ports.conf; \
+    sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT:-80}>/" /etc/apache2/sites-available/000-default.conf; \
+    apache2-foreground
