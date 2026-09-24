@@ -21,16 +21,14 @@ class ExceptionHandler
                 'status' => $exception->getStatusCode(),
             ]);
         } else {
-            $isDevelopment = 'dev' === $_ENV['APP_ENV'];
-
+            // DEBUG TEMPORÁRIO: sempre expõe a exceção real.
             $response->setData([
                 'error' => true,
-                'message' => $isDevelopment ? [
+                'message' => [
                     'message' => $exception->getMessage(),
                     'file' => $exception->getFile(),
                     'line' => $exception->getLine(),
-                    'trace' => $exception->getTrace(),
-                ] : 'An unexpected error occurred.',
+                ],
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
             ]);
         }
