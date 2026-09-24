@@ -54,7 +54,7 @@ class AnimeFireProvider implements MediaProviderInterface, MediaProviderProperti
 
     public function getSearchEpisodeEndpoint(int $episode, int $season, string $slug): string
     {
-        return self::API.'/animes/pesquisar?search='.urlencode($slug);
+        return self::API.'/animes/pesquisar?q='.urlencode($slug);
     }
 
     public function canUsePrefix(): bool
@@ -149,7 +149,7 @@ class AnimeFireProvider implements MediaProviderInterface, MediaProviderProperti
     public function listEpisodes(string $slug): array
     {
         $client = $this->client();
-        $res = $client->get('/animes/pesquisar', ['query' => ['search' => $slug]]);
+        $res = $client->get('/animes/pesquisar', ['query' => ['q' => $slug]]);
         if ($res->getStatusCode() >= 400) {
             return [];
         }
@@ -225,10 +225,10 @@ class AnimeFireProvider implements MediaProviderInterface, MediaProviderProperti
 
     public function searchEpisode(int $episodeNumber, int $season, string $slug): array
     {
-        $endpoint = self::API.'/animes/pesquisar?search='.urlencode($slug);
+        $endpoint = self::API.'/animes/pesquisar?q='.urlencode($slug);
         try {
             $client = $this->client();
-            $res = $client->get('/animes/pesquisar', ['query' => ['search' => $slug]]);
+            $res = $client->get('/animes/pesquisar', ['query' => ['q' => $slug]]);
             if ($res->getStatusCode() >= 400) {
                 return [$this->err($endpoint)];
             }
