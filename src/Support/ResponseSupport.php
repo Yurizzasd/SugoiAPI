@@ -39,7 +39,7 @@ class ResponseSupport
     public static function providerData(string $providerName, array $data): array
     {
         if (!(new ResponseSupport())->isProviderRegistered($providerName)) {
-            throw new ("The Provider $providerName is not registered. please add the provider to the Kernel::PROVIDERS array.");
+            throw new ProviderNotRegisteredException("The Provider $providerName is not registered. please add the provider to the Kernel::PROVIDERS array.");
         }
 
         $provider = (new ResponseSupport())->getProvider($providerName);
