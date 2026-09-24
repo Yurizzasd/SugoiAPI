@@ -2,12 +2,13 @@ FROM php:8.3-apache-bookworm
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Extensões compiladas no Debian (no Alpine a compilação quebra: iconv, libcurl...).
+# Debian + Apache: caminho padrão do Symfony (no Alpine a compilação quebra).
+# Só extensões essenciais — intl/zip vinham quebrando o build.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl unzip \
-    libcurl4-openssl-dev libicu-dev libonig-dev libxml2-dev libzip-dev \
+    libcurl4-openssl-dev libonig-dev libxml2-dev \
  && docker-php-ext-install -j$(nproc) \
-    ctype curl dom fileinfo iconv intl mbstring session simplexml tokenizer xml zip opcache \
+    ctype curl dom fileinfo mbstring session simplexml tokenizer xml opcache \
  && a2enmod rewrite \
  && rm -rf /var/lib/apt/lists/*
 
